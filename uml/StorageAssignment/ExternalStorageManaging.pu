@@ -1,0 +1,55 @@
+
+
+@startuml
+
+
+enum FileMode {
+    READ =  0000 0001b
+    WRITE = 0000 0010b
+}
+
+note bottom of FileMode : FileModes can be combined using XOR
+
+interface AutoCloseable
+
+class BlockFile {
+    - reader : FileReader
+    - writer : FileWriter
+
+    - BlockFile(File file, FileMode mode)
+    + open(File file, FileMode mode) : BlockFile
+    + append(int noOfBlks) : int
+    + write(int blkNo, byte[] blkBuffer) : int
+    + read(int blkNo) : byte[]
+    + size() : int
+    + drop(int noOfBlks): void
+}
+
+note "A BlockFile consists of multiple blocks holding data,\n\
+and a single FileControlBlock holding additional information\n\
+such as the a DataBlocks size and the total count of DataBlocks.\n\
+FileControl- and DataBlocks are mere data written into files.\n\
+A FileControlBlock has a defined size and will <b>always</b> be the\n\
+first block in a BlockFile." as BlockFileDesc
+
+
+BlockFileDesc .. BlockFile
+
+
+class FileCtrlBlk {
+    {static} + CTRL_BLK_SIZE : int = 8
+    - dataBlkSize : int
+    - noOfBlks : int
+    
+    + FileCtrlBlk(int blkSize)
+    + getDataBlkSize() : int
+    + getNoOfBlks() : int
+    + setNoOfBlks() : void
+}
+
+
+AutoCloseable <|-- BlockFile
+
+BlockFile *--"1" FileCtrlBlk
+
+@enduml
